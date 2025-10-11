@@ -1,7 +1,9 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import our screens
@@ -10,9 +12,42 @@ import SubjectsScreen from './src/screens/SubjectsScreen';
 import TimetableScreen from './src/screens/TimetableScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import LogStudyScreen from './src/screens/LogStudyScreen';
 
-// Create bottom tab navigator
+// Create navigators
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+// Subjects Stack Navigator
+function SubjectsStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#0a0a0a',
+          shadowColor: 'transparent',
+          elevation: 0,
+        },
+        headerTintColor: '#00ffff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        cardStyle: { backgroundColor: '#0a0a0a' }
+      }}
+    >
+      <Stack.Screen 
+        name="SubjectsMain" 
+        component={SubjectsScreen}
+        options={{ title: 'Subjects' }}
+      />
+      <Stack.Screen 
+        name="LogStudy" 
+        component={LogStudyScreen}
+        options={{ title: 'Log Study Session' }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 // Main App component
 export default function App() {
@@ -68,8 +103,8 @@ export default function App() {
         />
         <Tab.Screen 
           name="Subjects" 
-          component={SubjectsScreen}
-          options={{ title: 'Subjects' }}
+          component={SubjectsStack}
+          options={{ headerShown: false }}
         />
         <Tab.Screen 
           name="Timetable" 
