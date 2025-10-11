@@ -1,0 +1,6 @@
+com\studymate\model\Event.class
+com\studymate\service\EventService.class
+com\studymate\exception\GlobalExceptionHandler.class
+com\studymate\controller\EventController.class
+com\studymate\repository\EventRepository.class
+com\studymate\StudyMateApplication.class

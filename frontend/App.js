@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import BackendTestScreen from './src/screens/BackendTestScreen';
 
 // Import our screens
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -121,6 +122,11 @@ export default function App() {
           component={SettingsScreen}
           options={{ title: 'Settings' }}
         />
+        <Tab.Screen 
+  name="BackendTest" 
+  component={BackendTestScreen}
+  options={{ title: 'Backend Test' }}
+/>
       </Tab.Navigator>
     </NavigationContainer>
   );
