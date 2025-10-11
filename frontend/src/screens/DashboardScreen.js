@@ -1,5 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import GlassCard from '../components/GlassCard';
+import NeonButton from '../components/NeonButton';
+import StatCard from '../components/StatCard';
 
 export default function DashboardScreen() {
   return (
@@ -12,37 +15,35 @@ export default function DashboardScreen() {
 
       {/* Stats Overview */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>Today's Hours</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>Subjects</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>0%</Text>
-          <Text style={styles.statLabel}>Progress</Text>
-        </View>
-      </View>
-
-      {/* Recent Activity */}
-      <View style={styles.glassCard}>
-        <Text style={styles.cardTitle}>Recent Activity</Text>
-        <Text style={styles.emptyText}>No recent study sessions</Text>
-      </View>
-
-      {/* Upcoming Sessions */}
-      <View style={styles.glassCard}>
-        <Text style={styles.cardTitle}>Upcoming Sessions</Text>
-        <Text style={styles.emptyText}>No upcoming sessions scheduled</Text>
+        <StatCard number="0" label="Today's Hours" color="#00ffff" />
+        <StatCard number="0" label="Subjects" color="#ff00ff" />
+        <StatCard number="0%" label="Progress" color="#00ff88" />
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.glassCard}>
+      <GlassCard>
         <Text style={styles.cardTitle}>Quick Actions</Text>
-        <Text style={styles.emptyText}>Add your first subject to get started</Text>
-      </View>
+        <View style={styles.buttonRow}>
+          <NeonButton title="Add Subject" color="#00ffff" />
+          <NeonButton title="Log Study" color="#ff00ff" />
+        </View>
+        <View style={styles.buttonRow}>
+          <NeonButton title="Schedule" color="#00ff88" />
+          <NeonButton title="Set Goal" color="#ffaa00" />
+        </View>
+      </GlassCard>
+
+      {/* Recent Activity */}
+      <GlassCard>
+        <Text style={styles.cardTitle}>Recent Activity</Text>
+        <Text style={styles.emptyText}>No recent study sessions</Text>
+      </GlassCard>
+
+      {/* Upcoming Sessions */}
+      <GlassCard>
+        <Text style={styles.cardTitle}>Upcoming Sessions</Text>
+        <Text style={styles.emptyText}>No upcoming sessions scheduled</Text>
+      </GlassCard>
     </ScrollView>
   );
 }
@@ -71,43 +72,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 20,
-    marginBottom: 20,
-  },
-  statCard: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 15,
-    padding: 15,
-    minWidth: 80,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#00ffff',
-    marginBottom: 5,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#cccccc',
-  },
-  glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    padding: 20,
-    margin: 15,
-    marginTop: 0,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#00ffff',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    marginBottom: 10,
   },
   cardTitle: {
     fontSize: 18,
@@ -121,5 +86,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     padding: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
 });
