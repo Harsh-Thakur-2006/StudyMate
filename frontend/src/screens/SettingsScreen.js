@@ -4,9 +4,6 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      <Text style={styles.subtitle}>Customize your StudyMate</Text>
-      
       <View style={styles.glassCard}>
         <Text style={styles.cardTitle}>Account</Text>
         <Text style={styles.settingItem}>Sync with cloud</Text>
@@ -31,7 +28,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
     padding: 20,
     paddingTop: 60,
   },
@@ -47,7 +43,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(15, 15, 15, 0.8)',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,

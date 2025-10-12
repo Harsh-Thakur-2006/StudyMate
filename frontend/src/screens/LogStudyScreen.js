@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView, 
-  TextInput, 
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
   TouchableOpacity,
-  Alert 
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import GlassCard from '../components/GlassCard';
-import NeonButton from '../components/NeonButton';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSafeArea } from '../hooks/useSafeArea';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Header from '../components/Header'; // Import Header component
 import { SubjectService, SessionService } from '../services/StorageService';
 
 export default function LogStudyScreen({ navigation }) {
@@ -18,6 +21,8 @@ export default function LogStudyScreen({ navigation }) {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
+  const { colors } = useTheme();
+  const { safeAreaStyle } = useSafeArea();
 
   useEffect(() => {
     loadSubjects();
@@ -47,11 +52,11 @@ export default function LogStudyScreen({ navigation }) {
       });
 
       Alert.alert(
-        'Success', 
+        'Success',
         `Study session logged for ${selectedSubject.name}`,
         [
-          { 
-            text: 'OK', 
+          {
+            text: 'OK',
             onPress: () => {
               setSelectedSubject(null);
               setDuration('');
@@ -67,121 +72,229 @@ export default function LogStudyScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Log Study Session</Text>
-        <Text style={styles.subtitle}>Track your study time</Text>
-      </View>
+    <View style={[styles.container, safeAreaStyle]}>
+      {/* LOCAL HEADER WITH BACK BUTTON */}
+      <Header
+        title="Log Study Session"
+        subtitle="Track your study time"
+        showThemeToggle={true}
+        showBackButton={true}
+      />
 
-      {/* Subject Selection */}
-      <GlassCard>
-        <Text style={styles.cardTitle}>Select Subject</Text>
-        {subjects.length === 0 ? (
-          <Text style={styles.emptyText}>No subjects available. Add subjects first.</Text>
-        ) : (
-          <View style={styles.subjectsGrid}>
-            {subjects.map(subject => (
-              <TouchableOpacity
-                key={subject.id}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Subject Selection */}
+        <Card>
+          <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
+            Select Subject
+          </Text>
+          {subjects.length === 0 ? (
+            <View style={styles.emptySubjects}>
+              <Ionicons name="book-outline" size={40} color={colors.text.tertiary} />
+              <Text style={[styles.emptyText, { color: colors.text.tertiary }]}>
+                No subjects available
+              </Text>
+              <Text style={[styles.emptySubtext, { color: colors.text.secondary }]}>
+                Add subjects first to log study sessions
+              </Text>
+              <Button
+                title="Add Subjects"
+                onPress={() => navigation.navigate('SubjectsMain')}
+                color="primary"
+                style={styles.addSubjectsButton}
+              />
+            </View>
+          ) : (
+            <View style={styles.subjectsGrid}>
+              {subjects.map(subject => (
+                <TouchableOpacity
+                  key={subject.id}
+                  style={[
+                    styles.subjectOption,
+                    {
+                      backgroundColor: colors.glass.background,
+                      borderColor: colors.glass.border,
+                    },
+                    selectedSubject?.id === subject.id && [
+                      styles.subjectSelected,
+                      {
+                        borderColor: colors.success,
+                        backgroundColor: `${colors.success}20`,
+                      }
+                    ]
+                  ]}
+                  onPress={() => setSelectedSubject(subject)}
+                >
+                  <View style={[styles.colorDot, { backgroundColor: subject.color || colors.primary }]} />
+                  <Text style={[styles.subjectOptionText, { color: colors.text.primary }]}>
+                    {subject.name}
+                  </Text>
+                  {selectedSubject?.id === subject.id && (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </Card>
+
+        {/* Duration Input - Only show if subjects exist */}
+        {subjects.length > 0 && (
+          <Card>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
+              Duration
+            </Text>
+            <View style={styles.durationContainer}>
+              <TextInput
                 style={[
-                  styles.subjectOption,
-                  selectedSubject?.id === subject.id && styles.subjectSelected
+                  styles.durationInput,
+                  {
+                    backgroundColor: colors.glass.background,
+                    borderColor: colors.glass.border,
+                    color: colors.text.primary
+                  }
                 ]}
-                onPress={() => setSelectedSubject(subject)}
-              >
-                <View style={[styles.colorDot, { backgroundColor: subject.color }]} />
-                <Text style={styles.subjectOptionText}>{subject.name}</Text>
-                {selectedSubject?.id === subject.id && (
-                  <Ionicons name="checkmark-circle" size={20} color="#00ff88" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+                placeholder="Enter minutes"
+                placeholderTextColor={colors.text.tertiary}
+                value={duration}
+                onChangeText={setDuration}
+                keyboardType="numeric"
+              />
+              <Text style={[styles.durationLabel, { color: colors.text.secondary }]}>
+                minutes
+              </Text>
+            </View>
+          </Card>
         )}
-      </GlassCard>
 
-      {/* Duration Input */}
-      <GlassCard>
-        <Text style={styles.cardTitle}>Duration</Text>
-        <View style={styles.durationContainer}>
-          <TextInput
-            style={styles.durationInput}
-            placeholder="Enter minutes"
-            placeholderTextColor="#888888"
-            value={duration}
-            onChangeText={setDuration}
-            keyboardType="numeric"
+        {/* Notes Input - Only show if subjects exist */}
+        {subjects.length > 0 && (
+          <Card>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>
+              Notes (Optional)
+            </Text>
+            <TextInput
+              style={[
+                styles.notesInput,
+                {
+                  backgroundColor: colors.glass.background,
+                  borderColor: colors.glass.border,
+                  color: colors.text.primary
+                }
+              ]}
+              placeholder="Add any notes about this session..."
+              placeholderTextColor={colors.text.tertiary}
+              value={notes}
+              onChangeText={setNotes}
+              multiline={true}
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </Card>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionsContainer}>
+          <Button
+            title="Cancel"
+            onPress={() => navigation.goBack()}
+            color="error"
+            variant="outlined"
+            style={styles.actionButton}
           />
-          <Text style={styles.durationLabel}>minutes</Text>
+          {subjects.length > 0 && (
+            <Button
+              title="Log Session"
+              onPress={handleLogSession}
+              color="success"
+              style={styles.actionButton}
+              disabled={!selectedSubject || !duration}
+            />
+          )}
         </View>
-      </GlassCard>
 
-      {/* Notes Input */}
-      <GlassCard>
-        <Text style={styles.cardTitle}>Notes (Optional)</Text>
-        <TextInput
-          style={styles.notesInput}
-          placeholder="Add any notes about this session..."
-          placeholderTextColor="#888888"
-          value={notes}
-          onChangeText={setNotes}
-          multiline={true}
-          numberOfLines={3}
-        />
-      </GlassCard>
+        {/* Selected Subject Preview */}
+        {selectedSubject && (
+          <Card style={styles.previewCard}>
+            <Text style={[styles.previewTitle, { color: colors.primary }]}>
+              Session Preview
+            </Text>
+            <View style={styles.previewItem}>
+              <Text style={[styles.previewLabel, { color: colors.text.secondary }]}>
+                Subject:
+              </Text>
+              <View style={styles.subjectPreview}>
+                <View style={[styles.colorDot, { backgroundColor: selectedSubject.color || colors.primary }]} />
+                <Text style={[styles.previewValue, { color: colors.text.primary }]}>
+                  {selectedSubject.name}
+                </Text>
+              </View>
+            </View>
+            {duration && (
+              <View style={styles.previewItem}>
+                <Text style={[styles.previewLabel, { color: colors.text.secondary }]}>
+                  Duration:
+                </Text>
+                <Text style={[styles.previewValue, { color: colors.text.primary }]}>
+                  {duration} minutes
+                </Text>
+              </View>
+            )}
+            {notes && (
+              <View style={styles.previewItem}>
+                <Text style={[styles.previewLabel, { color: colors.text.secondary }]}>
+                  Notes:
+                </Text>
+                <Text style={[styles.previewValue, { color: colors.text.primary }]}>
+                  {notes}
+                </Text>
+              </View>
+            )}
+          </Card>
+        )}
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <NeonButton 
-          title="Cancel" 
-          onPress={() => navigation.goBack()}
-          color="#888888"
-          style={styles.actionButton}
-        />
-        <NeonButton 
-          title="Log Session" 
-          onPress={handleLogSession}
-          color="#00ff88"
-          style={styles.actionButton}
-          disabled={!selectedSubject || !duration}
-        />
-      </View>
-    </ScrollView>
+        {/* Add bottom padding */}
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
   },
-  header: {
-    padding: 30,
-    paddingTop: 60,
+  scrollView: {
+    flex: 1,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#888888',
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 30,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
     marginBottom: 15,
   },
-  emptyText: {
-    fontSize: 14,
-    color: '#888888',
-    fontStyle: 'italic',
-    textAlign: 'center',
+  emptySubjects: {
+    alignItems: 'center',
     padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  addSubjectsButton: {
+    width: '80%',
   },
   subjectsGrid: {
     flexDirection: 'row',
@@ -191,17 +304,14 @@ const styles = StyleSheet.create({
   subjectOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
     width: '48%',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   subjectSelected: {
-    borderColor: '#00ff88',
-    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+    borderWidth: 2,
   },
   colorDot: {
     width: 10,
@@ -211,7 +321,7 @@ const styles = StyleSheet.create({
   },
   subjectOptionText: {
     fontSize: 14,
-    color: '#ffffff',
+    fontWeight: '500',
     flex: 1,
   },
   durationContainer: {
@@ -220,37 +330,63 @@ const styles = StyleSheet.create({
   },
   durationInput: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     padding: 15,
-    color: '#ffffff',
     fontSize: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     marginRight: 10,
   },
   durationLabel: {
     fontSize: 16,
-    color: '#888888',
     width: 80,
   },
   notesInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     padding: 15,
-    color: '#ffffff',
     fontSize: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     textAlignVertical: 'top',
     minHeight: 100,
   },
   actionsContainer: {
     flexDirection: 'row',
-    padding: 20,
+    paddingHorizontal: 10,
+    marginBottom: 20,
   },
   actionButton: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  previewCard: {
+    marginTop: 10,
+  },
+  previewTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  previewItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  previewLabel: {
+    fontSize: 14,
+    width: '30%',
+  },
+  previewValue: {
+    fontSize: 14,
+    flex: 1,
+    textAlign: 'right',
+  },
+  subjectPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  bottomPadding: {
+    height: 30,
   },
 });

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView, 
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
   TouchableOpacity,
-  Alert 
+  Alert
 } from 'react-native';
-import GlassCard from '../components/GlassCard';
-import NeonButton from '../components/NeonButton';
+import GlassCard from '../components/Card';
+import NeonButton from '../components/Button';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSafeArea } from '../hooks/useSafeArea';
 import { SyncService } from '../services/StorageService';
 
 // Add this function to test network connectivity
@@ -37,6 +39,8 @@ export default function BackendTestScreen() {
   const [connectionStatus, setConnectionStatus] = useState(null);
   const [backendEvents, setBackendEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { colors } = useTheme();
+  const { safeAreaStyle } = useSafeArea();
 
   useEffect(() => {
     testConnection();
@@ -73,7 +77,7 @@ export default function BackendTestScreen() {
         eventDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
         description: 'Automated test event from React Native app'
       };
-      
+
       await SyncService.createEventInBackend(eventData);
       Alert.alert('Success', 'Test event created in backend!');
       await loadBackendEvents();
@@ -84,12 +88,7 @@ export default function BackendTestScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Backend Test</Text>
-        <Text style={styles.subtitle}>Test connection to Java backend</Text>
-      </View>
-
+    <ScrollView style={[styles.container, safeAreaStyle]}>
       {/* Connection Status */}
       <GlassCard>
         <Text style={styles.cardTitle}>Connection Status</Text>
@@ -120,22 +119,22 @@ export default function BackendTestScreen() {
       {/* Test Actions */}
       <GlassCard>
         <Text style={styles.cardTitle}>Test Actions</Text>
-        <NeonButton 
-          title="Test Connection" 
+        <NeonButton
+          title="Test Connection"
           onPress={testConnection}
           color="#00ffff"
           style={styles.testButton}
           disabled={loading}
         />
-        <NeonButton 
-          title="Create Test Event" 
+        <NeonButton
+          title="Create Test Event"
           onPress={createTestEvent}
           color="#00ff88"
           style={styles.testButton}
           disabled={loading || !connectionStatus?.connected}
         />
-        <NeonButton 
-          title="Refresh Events" 
+        <NeonButton
+          title="Refresh Events"
           onPress={loadBackendEvents}
           color="#ffaa00"
           style={styles.testButton}
@@ -169,7 +168,6 @@ export default function BackendTestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
   },
   header: {
     padding: 30,
@@ -188,7 +186,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#424242ff',
     marginBottom: 15,
   },
   statusContainer: {
@@ -209,7 +207,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#4e4e4eff',
     marginBottom: 5,
   },
   statusMessage: {

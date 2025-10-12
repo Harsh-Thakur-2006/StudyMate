@@ -4,8 +4,6 @@ import { StyleSheet, Text, View } from 'react-native';
 export default function TimetableScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Timetable</Text>
-      <Text style={styles.subtitle}>Schedule your study sessions</Text>
       <View style={styles.glassCard}>
         <Text style={styles.emptyText}>No timetable entries yet</Text>
       </View>
@@ -16,7 +14,6 @@ export default function TimetableScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
     padding: 20,
     paddingTop: 60,
   },

@@ -12,13 +12,13 @@ const STORAGE_KEYS = {
 // Subject operations
 export const SubjectService = {
   // Get all subjects
-  getSubjects: async () => {
+  getSubjectById: async (id) => {
     try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.SUBJECTS);
-      return jsonValue != null ? JSON.parse(jsonValue) : [];
+      const subjects = await SubjectService.getSubjects();
+      return subjects.find(subject => subject.id === id) || null;
     } catch (e) {
-      console.error('Error getting subjects:', e);
-      return [];
+      console.error('Error getting subject by ID:', e);
+      return null;
     }
   },
 
@@ -132,10 +132,10 @@ export const SyncService = {
     try {
       const backendEvents = await EventApi.getAllEvents();
       console.log('Fetched events from backend:', backendEvents.length);
-      
+
       // Store backend events in local storage for offline access
       await AsyncStorage.setItem('@studymate_backend_events', JSON.stringify(backendEvents));
-      
+
       return backendEvents;
     } catch (error) {
       console.error('Error syncing events from backend:', error);
