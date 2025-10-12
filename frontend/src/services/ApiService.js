@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Use your actual IP address
-const API_BASE_URL = 'http://192.168.1.102:8080/api';
+const API_BASE_URL = 'https://studymate-kwso.onrender.com/api';
 
-console.log('Using API URL:', API_BASE_URL);
+console.log('Using Production API URL:', API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
@@ -29,11 +29,17 @@ api.interceptors.request.use(
 // Add response interceptor for logging
 api.interceptors.response.use(
   (response) => {
-    console.log('API response received:', response.status);
+    console.log('API response received:', response.status, response.data);
     return response;
   },
   (error) => {
-    console.error('API response error:', error.message);
+    console.error('API response error details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      headers: error.config?.headers
+    });
     return Promise.reject(error);
   }
 );
