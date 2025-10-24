@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,23 +7,24 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
-  Alert
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../contexts/ThemeContext';
-import { useSafeArea } from '../hooks/useSafeArea';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import Header from '../components/Header';
-import { SubjectService } from '../services/StorageService';
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useTheme } from "../contexts/ThemeContext";
+import { useSafeArea } from "../hooks/useSafeArea";
+import Card from "../components/Card";
+import Button from "../components/Button";
+import Header from "../components/Header";
+import { SubjectService } from "../services/StorageService";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function SubjectsScreen() {
   const [subjects, setSubjects] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [newSubjectName, setNewSubjectName] = useState('');
+  const [newSubjectName, setNewSubjectName] = useState("");
   const navigation = useNavigation();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
   const { safeAreaStyle } = useSafeArea();
 
   useEffect(() => {
@@ -37,38 +38,38 @@ export default function SubjectsScreen() {
 
   const handleAddSubject = async () => {
     if (!newSubjectName.trim()) {
-      Alert.alert('Error', 'Please enter a subject name');
+      Alert.alert("Error", "Please enter a subject name");
       return;
     }
 
     try {
       await SubjectService.saveSubject({ name: newSubjectName.trim() });
-      setNewSubjectName('');
+      setNewSubjectName("");
       setModalVisible(false);
       loadSubjects();
     } catch (error) {
-      Alert.alert('Error', 'Failed to add subject');
+      Alert.alert("Error", "Failed to add subject");
     }
   };
 
   const handleDeleteSubject = (subject) => {
     Alert.alert(
-      'Delete Subject',
+      "Delete Subject",
       `Are you sure you want to delete "${subject.name}"?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               await SubjectService.deleteSubject(subject.id);
               loadSubjects();
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete subject');
+              Alert.alert("Error", "Failed to delete subject");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -76,7 +77,12 @@ export default function SubjectsScreen() {
   const renderSubjectItem = ({ item }) => (
     <Card style={styles.subjectItem}>
       <View style={styles.subjectInfo}>
-        <View style={[styles.colorDot, { backgroundColor: item.color || colors.primary }]} />
+        <View
+          style={[
+            styles.colorDot,
+            { backgroundColor: item.color || colors.primary },
+          ]}
+        />
         <Text style={[styles.subjectName, { color: colors.text.primary }]}>
           {item.name}
         </Text>
@@ -106,7 +112,7 @@ export default function SubjectsScreen() {
       <View style={styles.quickActionContainer}>
         <Button
           title="Log Study Session"
-          onPress={() => navigation.navigate('LogStudy')}
+          onPress={() => navigation.navigate("LogStudy")}
           color="secondary"
           style={styles.quickActionButton}
         />
@@ -135,7 +141,12 @@ export default function SubjectsScreen() {
   );
 
   return (
-    <View style={[styles.container, safeAreaStyle]}>
+    <LinearGradient
+      colors={gradients.background}
+      style={[styles.container, safeAreaStyle]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       {/* LOCAL HEADER */}
       <Header
         title="Subjects"
@@ -147,7 +158,7 @@ export default function SubjectsScreen() {
       <FlatList
         data={subjects}
         renderItem={renderSubjectItem}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         style={styles.flatList}
         contentContainerStyle={styles.flatListContent}
         showsVerticalScrollIndicator={false}
@@ -176,8 +187,8 @@ export default function SubjectsScreen() {
                   {
                     backgroundColor: colors.glass.background,
                     borderColor: colors.glass.border,
-                    color: colors.text.primary
-                  }
+                    color: colors.text.primary,
+                  },
                 ]}
                 placeholder="Enter subject name"
                 placeholderTextColor={colors.text.tertiary}
@@ -205,7 +216,7 @@ export default function SubjectsScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -226,25 +237,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   addButton: {
-    width: '100%',
+    width: "100%",
   },
   quickActionContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
   },
   quickActionButton: {
-    width: '100%',
+    width: "100%",
   },
   subjectItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginHorizontal: 20,
     marginBottom: 10,
   },
   subjectInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   colorDot: {
@@ -255,57 +266,57 @@ const styles = StyleSheet.create({
   },
   subjectName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   deleteButton: {
     padding: 5,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 40,
-    width: '100%',
+    width: "100%",
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 15,
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   emptyButton: {
-    width: '80%',
+    width: "80%",
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     padding: 20,
   },
   modalContainer: {
-    maxHeight: '80%',
-    justifyContent: 'center',
+    maxHeight: "80%",
+    justifyContent: "center",
   },
   modalContent: {
     padding: 25,
     margin: 10,
-    maxWidth: '100%',
+    maxWidth: "100%",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   textInput: {
     borderRadius: 10,
@@ -313,12 +324,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     marginBottom: 20,
-    width: '100%',
+    width: "100%",
   },
   modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   modalButton: {
     flex: 1,
