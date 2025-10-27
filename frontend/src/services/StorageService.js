@@ -262,14 +262,20 @@ export const SyncService = {
 
       console.log(`Syncing ${sessions.length} sessions to backend...`);
 
+      let syncedCount = 0;
+
       for (const session of sessions) {
         const subject = subjects.find((s) => s.id === session.subjectId);
+
+        // Format the date properly for backend
+        const sessionDate = new Date(session.date);
+
         const eventData = {
           name: `Study: ${subject?.name || "Unknown Subject"}`,
-          eventDate: session.date,
+          eventDate: sessionDate.toISOString(), // Ensure proper ISO format
           description: session.notes || `Studied ${session.duration} minutes`,
           subject: subject?.name || "General",
-          eventType: "STUDY_SESSION",
+          eventType: "STUDY",
           duration: session.duration,
           priority: 2,
         };
@@ -277,8 +283,10 @@ export const SyncService = {
         try {
           await EventApi.createEvent(eventData);
           console.log(`Synced session: ${eventData.name}`);
+          syncedCount++;
         } catch (error) {
           console.error(`Failed to sync session: ${error.message}`);
+          // Continue with other sessions even if one fails
         }
       }
 
@@ -286,7 +294,7 @@ export const SyncService = {
         STORAGE_KEYS.LAST_SYNC,
         new Date().toISOString()
       );
-      return { success: true, synced: sessions.length };
+      return { success: true, synced: syncedCount };
     } catch (error) {
       console.error("Error syncing sessions to backend:", error);
       throw error;

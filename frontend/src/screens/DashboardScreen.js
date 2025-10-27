@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Alert } from "react-native";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { useTheme } from "../contexts/ThemeContext";
 import { useSafeArea } from "../hooks/useSafeArea";
@@ -9,7 +9,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import StatCard from "../components/StatCard";
-import { SubjectService, SessionService } from "../services/StorageService";
+import {
+  SubjectService,
+  SessionService,
+  SyncService,
+} from "../services/StorageService";
 
 export default function DashboardScreen() {
   const [subjectsCount, setSubjectsCount] = useState(0);
@@ -67,6 +71,19 @@ export default function DashboardScreen() {
     navigation.navigate("Subjects", { screen: "LogStudy" });
   };
 
+  const handleSyncData = async () => {
+    try {
+      const result = await SyncService.fullSync();
+      Alert.alert(
+        "Sync Complete",
+        `Synced ${result.sessionsSynced} sessions and received ${result.eventsReceived} events`
+      );
+      loadDashboardData(); // Refresh the data
+    } catch (error) {
+      Alert.alert("Sync Failed", error.message);
+    }
+  };
+
   const handleAddSubject = () => {
     navigation.navigate("Subjects");
   };
@@ -119,8 +136,8 @@ export default function DashboardScreen() {
               style={styles.flexButton}
             />
             <Button
-              title="View Progress"
-              onPress={() => navigation.navigate("Progress")}
+              title="Sync Data"
+              onPress={handleSyncData}
               color="success"
               style={styles.flexButton}
             />
