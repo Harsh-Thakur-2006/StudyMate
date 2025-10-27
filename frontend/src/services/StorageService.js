@@ -7,11 +7,12 @@ const STORAGE_KEYS = {
   STUDY_SESSIONS: "@studymate_sessions",
   GOALS: "@studymate_goals",
   TIMETABLE: "@studymate_timetable",
+  BACKEND_EVENTS: "@studymate_backend_events",
+  LAST_SYNC: "@studymate_last_sync",
 };
 
 // Subject operations
 export const SubjectService = {
-  // Get all subjects
   getSubjects: async () => {
     try {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.SUBJECTS);
@@ -22,7 +23,6 @@ export const SubjectService = {
     }
   },
 
-  // Get subject by ID
   getSubjectById: async (id) => {
     try {
       const subjects = await SubjectService.getSubjects();
@@ -33,15 +33,16 @@ export const SubjectService = {
     }
   },
 
-  // Save a subject
   saveSubject: async (subject) => {
     try {
       const subjects = await SubjectService.getSubjects();
       const newSubject = {
         id: Date.now().toString(),
         name: subject.name,
-        color: subject.color || "#00ffff",
+        color: subject.color || getRandomColor(),
         createdAt: new Date().toISOString(),
+        targetHours: subject.targetHours || 0,
+        completedHours: subject.completedHours || 0,
       };
       subjects.push(newSubject);
       await AsyncStorage.setItem(
@@ -55,7 +56,6 @@ export const SubjectService = {
     }
   },
 
-  // Delete a subject
   deleteSubject: async (id) => {
     try {
       const subjects = await SubjectService.getSubjects();
@@ -70,11 +70,34 @@ export const SubjectService = {
       throw e;
     }
   },
+
+  updateSubjectProgress: async (subjectId, additionalMinutes) => {
+    try {
+      const subjects = await SubjectService.getSubjects();
+      const updatedSubjects = subjects.map((subject) => {
+        if (subject.id === subjectId) {
+          return {
+            ...subject,
+            completedHours:
+              (subject.completedHours || 0) + additionalMinutes / 60,
+          };
+        }
+        return subject;
+      });
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.SUBJECTS,
+        JSON.stringify(updatedSubjects)
+      );
+      return true;
+    } catch (e) {
+      console.error("Error updating subject progress:", e);
+      throw e;
+    }
+  },
 };
 
 // Study session operations
 export const SessionService = {
-  // Get all study sessions
   getSessions: async () => {
     try {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.STUDY_SESSIONS);
@@ -85,7 +108,6 @@ export const SessionService = {
     }
   },
 
-  // Save a study session
   saveSession: async (session) => {
     try {
       const sessions = await SessionService.getSessions();
@@ -95,15 +117,105 @@ export const SessionService = {
         duration: session.duration, // in minutes
         notes: session.notes || "",
         date: new Date().toISOString(),
+        subjectName: session.subjectName || "",
       };
       sessions.push(newSession);
       await AsyncStorage.setItem(
         STORAGE_KEYS.STUDY_SESSIONS,
         JSON.stringify(sessions)
       );
+
+      // Update subject progress
+      await SubjectService.updateSubjectProgress(
+        session.subjectId,
+        session.duration
+      );
+
       return newSession;
     } catch (e) {
       console.error("Error saving session:", e);
+      throw e;
+    }
+  },
+
+  getSessionsByDateRange: async (startDate, endDate) => {
+    try {
+      const sessions = await SessionService.getSessions();
+      return sessions.filter((session) => {
+        const sessionDate = new Date(session.date);
+        return sessionDate >= startDate && sessionDate <= endDate;
+      });
+    } catch (e) {
+      console.error("Error getting sessions by date range:", e);
+      return [];
+    }
+  },
+};
+
+// Goal operations
+export const GoalService = {
+  getGoals: async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.GOALS);
+      return jsonValue != null ? JSON.parse(jsonValue) : [];
+    } catch (e) {
+      console.error("Error getting goals:", e);
+      return [];
+    }
+  },
+
+  saveGoal: async (goal) => {
+    try {
+      const goals = await GoalService.getGoals();
+      const newGoal = {
+        id: Date.now().toString(),
+        title: goal.title,
+        description: goal.description || "",
+        targetDate: goal.targetDate,
+        targetHours: goal.targetHours || 0,
+        completedHours: goal.completedHours || 0,
+        subjectId: goal.subjectId || null,
+        priority: goal.priority || 3,
+        createdAt: new Date().toISOString(),
+        status: "active",
+      };
+      goals.push(newGoal);
+      await AsyncStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+      return newGoal;
+    } catch (e) {
+      console.error("Error saving goal:", e);
+      throw e;
+    }
+  },
+
+  updateGoalProgress: async (goalId, additionalHours) => {
+    try {
+      const goals = await GoalService.getGoals();
+      const updatedGoals = goals.map((goal) => {
+        if (goal.id === goalId) {
+          const newCompletedHours =
+            (goal.completedHours || 0) + additionalHours;
+          const status =
+            newCompletedHours >= goal.targetHours ? "completed" : "active";
+          return {
+            ...goal,
+            completedHours: newCompletedHours,
+            status: status,
+            completedAt:
+              status === "completed"
+                ? new Date().toISOString()
+                : goal.completedAt,
+          };
+        }
+        return goal;
+      });
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.GOALS,
+        JSON.stringify(updatedGoals)
+      );
+      return true;
+    } catch (e) {
+      console.error("Error updating goal progress:", e);
       throw e;
     }
   },
@@ -115,34 +227,68 @@ export const SyncService = {
   testBackendConnection: async () => {
     try {
       const result = await EventApi.testBackendConnection();
-      return { connected: true, data: result };
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.LAST_SYNC,
+        new Date().toISOString()
+      );
+      return {
+        connected: true,
+        data: result,
+        timestamp: new Date().toISOString(),
+      };
     } catch (error) {
-      return { connected: false, error: error.message };
+      return {
+        connected: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
     }
   },
 
-  // Sync local subjects to backend (when user logs in)
-  syncSubjectsToBackend: async () => {
+  // Get last sync timestamp
+  getLastSync: async () => {
     try {
-      const localSubjects = await SubjectService.getSubjects();
-      console.log("Syncing subjects to backend:", localSubjects.length);
-      // In a real app, we would send subjects to backend here
-      return localSubjects;
-    } catch (error) {
-      console.error("Error syncing subjects:", error);
-      throw error;
+      return await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+    } catch (e) {
+      return null;
     }
   },
 
-  // Sync study sessions to backend
+  // Sync study sessions to backend as events
   syncSessionsToBackend: async () => {
     try {
-      const localSessions = await SessionService.getSessions();
-      console.log("Syncing sessions to backend:", localSessions.length);
-      // In a real app, we would send sessions to backend here
-      return localSessions;
+      const sessions = await SessionService.getSessions();
+      const subjects = await SubjectService.getSubjects();
+
+      console.log(`Syncing ${sessions.length} sessions to backend...`);
+
+      for (const session of sessions) {
+        const subject = subjects.find((s) => s.id === session.subjectId);
+        const eventData = {
+          name: `Study: ${subject?.name || "Unknown Subject"}`,
+          eventDate: session.date,
+          description: session.notes || `Studied ${session.duration} minutes`,
+          subject: subject?.name || "General",
+          eventType: "STUDY_SESSION",
+          duration: session.duration,
+          priority: 2,
+        };
+
+        try {
+          await EventApi.createEvent(eventData);
+          console.log(`Synced session: ${eventData.name}`);
+        } catch (error) {
+          console.error(`Failed to sync session: ${error.message}`);
+        }
+      }
+
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.LAST_SYNC,
+        new Date().toISOString()
+      );
+      return { success: true, synced: sessions.length };
     } catch (error) {
-      console.error("Error syncing sessions:", error);
+      console.error("Error syncing sessions to backend:", error);
       throw error;
     }
   },
@@ -155,16 +301,20 @@ export const SyncService = {
 
       // Store backend events in local storage for offline access
       await AsyncStorage.setItem(
-        "@studymate_backend_events",
+        STORAGE_KEYS.BACKEND_EVENTS,
         JSON.stringify(backendEvents)
       );
 
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.LAST_SYNC,
+        new Date().toISOString()
+      );
       return backendEvents;
     } catch (error) {
-      console.error("Error syncing events from backend:", error);
+      console.error("Error syncing events from backend:", error.message);
       // Fallback to local storage if backend is unavailable
       const localEvents = await AsyncStorage.getItem(
-        "@studymate_backend_events"
+        STORAGE_KEYS.BACKEND_EVENTS
       );
       return localEvents ? JSON.parse(localEvents) : [];
     }
@@ -175,12 +325,63 @@ export const SyncService = {
     try {
       const backendEvent = await EventApi.createEvent(eventData);
       console.log("Created event in backend:", backendEvent);
+
+      // Update local cache
+      const currentEvents = await SyncService.syncEventsFromBackend().catch(
+        () => []
+      );
       return backendEvent;
     } catch (error) {
       console.error("Error creating event in backend:", error);
       throw error;
     }
   },
+
+  // Full sync - both directions
+  fullSync: async () => {
+    try {
+      console.log("Starting full sync...");
+
+      // Sync local sessions to backend
+      const syncResult = await SyncService.syncSessionsToBackend();
+
+      // Sync events from backend
+      const backendEvents = await SyncService.syncEventsFromBackend();
+
+      console.log("Full sync completed");
+      return {
+        success: true,
+        sessionsSynced: syncResult.synced,
+        eventsReceived: backendEvents.length,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Full sync failed:", error);
+      throw error;
+    }
+  },
+};
+
+// Helper function for random colors
+const getRandomColor = () => {
+  const colors = [
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
+    "#FFEAA7",
+    "#DDA0DD",
+    "#98D8C8",
+    "#F7DC6F",
+    "#BB8FCE",
+    "#85C1E9",
+    "#F8C471",
+    "#82E0AA",
+    "#F1948A",
+    "#85C1E9",
+    "#D7BDE2",
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 // Clear all data (for development)
@@ -197,6 +398,7 @@ export const clearAllData = async () => {
 export default {
   SubjectService,
   SessionService,
+  GoalService,
   SyncService,
   clearAllData,
 };
