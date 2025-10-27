@@ -36,16 +36,26 @@ api.interceptors.response.use(
     console.error("API Response Error:", {
       message: error.message,
       status: error.response?.status,
+      data: error.response?.data,
       url: error.config?.url,
     });
 
-    // Error messages
+    // Error messages for mobile
     if (error.code === "ECONNABORTED") {
       error.message = "Request timeout. Please check your connection.";
     } else if (!error.response) {
       error.message = "Network error. Please check your internet connection.";
     } else if (error.response.status >= 500) {
       error.message = "Server error. Please try again later.";
+    } else if (error.response.status === 400) {
+      // Show backend validation errors if available
+      const backendError = error.response.data;
+      if (backendError && typeof backendError === "object") {
+        const errorMsg = Object.values(backendError).join(", ");
+        error.message = `Validation error: ${errorMsg}`;
+      } else {
+        error.message = "Invalid data sent to server.";
+      }
     }
 
     return Promise.reject(error);
@@ -102,9 +112,9 @@ export const EventApi = {
   // Create new event
   createEvent: async (eventData) => {
     try {
-      // Transform data to match backend expectations
+      // Transform and validate data for backend
       const transformedData = {
-        name: eventData.name,
+        name: eventData.name || "Untitled Event",
         eventDate: eventData.eventDate || new Date().toISOString(),
         description: eventData.description || "",
         subject: eventData.subject || "General",
@@ -113,10 +123,15 @@ export const EventApi = {
         priority: eventData.priority || 3,
       };
 
+      console.log("Sending event data:", transformedData);
+
       const response = await api.post("/events", transformedData);
       return response.data;
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.error(
+        "Error creating event:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
