@@ -18,6 +18,7 @@ import ProgressScreen from "./src/screens/ProgressScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import BackendTestScreen from "./src/screens/BackendTestScreen";
 import LogStudyScreen from "./src/screens/LogStudyScreen";
+import GoalSettingScreen from "./src/screens/GoalSettingScreen";
 
 // Import Header
 import Header from "./src/components/Header";
@@ -41,6 +42,19 @@ function SubjectsStack() {
   );
 }
 
+function GoalsStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: "transparent" },
+      }}
+    >
+      <Stack.Screen name="GoalsMain" component={GoalSettingScreen} />
+    </Stack.Navigator>
+  );
+}
+
 // Custom Header for Tab Screens
 const CustomTabHeader = ({ title, subtitle }) => {
   return <Header title={title} subtitle={subtitle} showThemeToggle={true} />;
@@ -52,6 +66,8 @@ function MainNavigator() {
 
   const tabHeaders = {
     Dashboard: { title: "StudyMate", subtitle: "Your smart study companion" },
+    Subjects: { title: "Subjects", subtitle: "Manage your study subjects" },
+    Goals: { title: "Goals", subtitle: "Set and track your targets" },
     Timetable: { title: "Timetable", subtitle: "Schedule your study sessions" },
     Progress: { title: "Progress", subtitle: "Track your study journey" },
     Settings: { title: "Settings", subtitle: "Customize your app" },
@@ -68,6 +84,8 @@ function MainNavigator() {
             iconName = focused ? "speedometer" : "speedometer-outline";
           } else if (route.name === "Subjects") {
             iconName = focused ? "book" : "book-outline";
+          } else if (route.name === "Goals") {
+            iconName = focused ? "trophy" : "trophy-outline";
           } else if (route.name === "Timetable") {
             iconName = focused ? "calendar" : "calendar-outline";
           } else if (route.name === "Progress") {
@@ -117,6 +135,11 @@ function MainNavigator() {
       <Tab.Screen
         name="Subjects"
         component={SubjectsStack}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Goals"
+        component={GoalsStack}
         options={{ headerShown: false }}
       />
       <Tab.Screen name="Timetable" component={TimetableScreen} />
