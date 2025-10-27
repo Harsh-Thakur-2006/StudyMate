@@ -24,10 +24,32 @@ public class EventService {
     }
 
     public Event createEvent(Event event) {
-        // Validate event date is not in the past
-        if (event.getEventDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Event date cannot be in the past");
+        if (event.getName() == null || event.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Event name cannot be empty");
         }
+        
+        if (event.getEventDate() == null) {
+            throw new IllegalArgumentException("Event date is required");
+        }
+        
+        // Validate event date is not in the past (allow same day events)
+        if (event.getEventDate().isBefore(LocalDateTime.now().minusHours(1))) {
+            throw new IllegalArgumentException("Event date cannot be more than 1 hour in the past");
+        }
+        
+        // Set default values for new fields if not provided
+        if (event.getEventType() == null) {
+            event.setEventType("STUDY");
+        }
+        
+        if (event.getDuration() == null) {
+            event.setDuration(60); // Default 60 minutes
+        }
+        
+        if (event.getPriority() == null) {
+            event.setPriority(3); // Default medium priority
+        }
+        
         return eventRepository.save(event);
     }
 
@@ -39,6 +61,10 @@ public class EventService {
             event.setName(eventDetails.getName());
             event.setEventDate(eventDetails.getEventDate());
             event.setDescription(eventDetails.getDescription());
+            event.setSubject(eventDetails.getSubject());
+            event.setEventType(eventDetails.getEventType());
+            event.setDuration(eventDetails.getDuration());
+            event.setPriority(eventDetails.getPriority());
             
             return eventRepository.save(event);
         }
@@ -59,5 +85,24 @@ public class EventService {
 
     public List<Event> getEventsByDateRange(LocalDateTime start, LocalDateTime end) {
         return eventRepository.findByEventDateBetween(start, end);
+    }
+    
+    // NEW METHODS
+    public List<Event> getEventsBySubject(String subject) {
+        return eventRepository.findBySubjectContainingIgnoreCase(subject);
+    }
+    
+    public List<Event> getEventsByType(String eventType) {
+        return eventRepository.findByEventType(eventType);
+    }
+    
+    public List<Event> getTodayEvents() {
+        return eventRepository.findTodayEvents();
+    }
+    
+    public List<Event> getThisWeekEvents() {
+        LocalDateTime startOfWeek = LocalDateTime.now().with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0);
+        LocalDateTime endOfWeek = startOfWeek.plusDays(7);
+        return eventRepository.findThisWeekEvents(startOfWeek, endOfWeek);
     }
 }

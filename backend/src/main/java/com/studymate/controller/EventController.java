@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Allow requests from React Native app
+@CrossOrigin(origins = "*")
 public class EventController {
 
     @Autowired
@@ -28,10 +28,13 @@ public class EventController {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Welcome to StudyMate API!");
         response.put("timestamp", LocalDateTime.now());
+        response.put("status", "connected");
         response.put("endpoints", List.of(
             "GET /api/events - Get all events",
-            "POST /api/events - Create new event",
-            "DELETE /api/events/{id} - Delete event"
+            "POST /api/events - Create new event", 
+            "DELETE /api/events/{id} - Delete event",
+            "GET /api/events/today - Get today's events",
+            "GET /api/events/week - Get this week's events"
         ));
         return ResponseEntity.ok(response);
     }
@@ -98,5 +101,45 @@ public class EventController {
             response.put("error", "Event not found");
             return ResponseEntity.notFound().build();
         }
+    }
+    
+    // NEW ENDPOINTS
+    
+    // GET /events/today - Get today's events
+    @GetMapping("/events/today")
+    public ResponseEntity<List<Event>> getTodayEvents() {
+        List<Event> events = eventService.getTodayEvents();
+        return ResponseEntity.ok(events);
+    }
+    
+    // GET /events/week - Get this week's events  
+    @GetMapping("/events/week")
+    public ResponseEntity<List<Event>> getThisWeekEvents() {
+        List<Event> events = eventService.getThisWeekEvents();
+        return ResponseEntity.ok(events);
+    }
+    
+    // GET /events/subject/{subject} - Get events by subject
+    @GetMapping("/events/subject/{subject}")
+    public ResponseEntity<List<Event>> getEventsBySubject(@PathVariable String subject) {
+        List<Event> events = eventService.getEventsBySubject(subject);
+        return ResponseEntity.ok(events);
+    }
+    
+    // GET /events/type/{type} - Get events by type
+    @GetMapping("/events/type/{type}")
+    public ResponseEntity<List<Event>> getEventsByType(@PathVariable String type) {
+        List<Event> events = eventService.getEventsByType(type);
+        return ResponseEntity.ok(events);
+    }
+    
+    // Health check endpoint
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> healthCheck() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("service", "StudyMate Backend");
+        return ResponseEntity.ok(response);
     }
 }

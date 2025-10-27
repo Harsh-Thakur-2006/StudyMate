@@ -22,6 +22,11 @@ public class Event {
 
     private String description;
     
+    private String subject;
+    private String eventType; // STUDY, CLASS, EXAM, etc.
+    private Integer duration; // in minutes
+    private Integer priority;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -35,11 +40,16 @@ public class Event {
     }
 
     // Parameterized constructor
-    public Event(String name, LocalDateTime eventDate, String description) {
+    public Event(String name, LocalDateTime eventDate, String description, 
+                 String subject, String eventType, Integer duration, Integer priority) {
         this();
         this.name = name;
         this.eventDate = eventDate;
         this.description = description;
+        this.subject = subject;
+        this.eventType = eventType;
+        this.duration = duration;
+        this.priority = priority;
     }
 
     // Getters and Setters
@@ -75,6 +85,42 @@ public class Event {
 
     public void setDescription(String description) {
         this.description = description;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
         this.updatedAt = LocalDateTime.now();
     }
 
