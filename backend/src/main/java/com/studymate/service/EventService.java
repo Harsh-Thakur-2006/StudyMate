@@ -32,11 +32,6 @@ public class EventService {
             throw new IllegalArgumentException("Event date is required");
         }
         
-        // Validate event date is not in the past (allow same day events)
-        if (event.getEventDate().isBefore(LocalDateTime.now().minusHours(1))) {
-            throw new IllegalArgumentException("Event date cannot be more than 1 hour in the past");
-        }
-        
         // Set default values for new fields if not provided
         if (event.getEventType() == null) {
             event.setEventType("STUDY");
