@@ -1,58 +1,89 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Use your actual IP address
-const API_BASE_URL = 'https://studymate-kwso.onrender.com/api';
+// Render URL
+const API_BASE_URL = "https://studymate-kwso.onrender.com/api";
 
-console.log('Using Production API URL:', API_BASE_URL);
+console.log("Using Production API URL:", API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Add request interceptor for logging
+// Request interceptor for logging
 api.interceptors.request.use(
   (config) => {
-    console.log('Making API request to:', config.url);
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('API request error:', error);
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for logging
+// Response interceptor for logging
 api.interceptors.response.use(
   (response) => {
-    console.log('API response received:', response.status, response.data);
+    console.log(`API Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    console.error('API response error details:', {
+    console.error("API Response Error:", {
       message: error.message,
       status: error.response?.status,
-      data: error.response?.data,
       url: error.config?.url,
-      headers: error.config?.headers
     });
+
+    // Error messages
+    if (error.code === "ECONNABORTED") {
+      error.message = "Request timeout. Please check your connection.";
+    } else if (!error.response) {
+      error.message = "Network error. Please check your internet connection.";
+    } else if (error.response.status >= 500) {
+      error.message = "Server error. Please try again later.";
+    }
+
     return Promise.reject(error);
   }
 );
 
 // Event API calls
 export const EventApi = {
+  // Test backend connection
+  testBackendConnection: async () => {
+    try {
+      const response = await api.get("/hello");
+      console.log("Backend connection successful:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Backend connection failed:", error.message);
+      throw new Error(`Backend connection failed: ${error.message}`);
+    }
+  },
+
+  // Health check
+  healthCheck: async () => {
+    try {
+      const response = await api.get("/health");
+      return response.data;
+    } catch (error) {
+      console.error("Health check failed:", error);
+      throw error;
+    }
+  },
+
   // Get all events
   getAllEvents: async () => {
     try {
-      const response = await api.get('/events');
+      const response = await api.get("/events");
       return response.data;
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error("Error fetching events:", error);
       throw error;
     }
   },
@@ -63,7 +94,7 @@ export const EventApi = {
       const response = await api.get(`/events/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching event:', error);
+      console.error("Error fetching event:", error);
       throw error;
     }
   },
@@ -71,10 +102,21 @@ export const EventApi = {
   // Create new event
   createEvent: async (eventData) => {
     try {
-      const response = await api.post('/events', eventData);
+      // Transform data to match backend expectations
+      const transformedData = {
+        name: eventData.name,
+        eventDate: eventData.eventDate || new Date().toISOString(),
+        description: eventData.description || "",
+        subject: eventData.subject || "General",
+        eventType: eventData.eventType || "STUDY",
+        duration: eventData.duration || 60,
+        priority: eventData.priority || 3,
+      };
+
+      const response = await api.post("/events", transformedData);
       return response.data;
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error("Error creating event:", error);
       throw error;
     }
   },
@@ -85,7 +127,7 @@ export const EventApi = {
       const response = await api.put(`/events/${id}`, eventData);
       return response.data;
     } catch (error) {
-      console.error('Error updating event:', error);
+      console.error("Error updating event:", error);
       throw error;
     }
   },
@@ -96,7 +138,7 @@ export const EventApi = {
       const response = await api.delete(`/events/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error("Error deleting event:", error);
       throw error;
     }
   },
@@ -104,27 +146,35 @@ export const EventApi = {
   // Get upcoming events
   getUpcomingEvents: async () => {
     try {
-      const response = await api.get('/events/upcoming');
+      const response = await api.get("/events/upcoming");
       return response.data;
     } catch (error) {
-      console.error('Error fetching upcoming events:', error);
+      console.error("Error fetching upcoming events:", error);
       throw error;
     }
   },
 
-  // Test connection to backend - ADD THIS FUNCTION
-  testBackendConnection: async () => {
+  // Get today's events
+  getTodayEvents: async () => {
     try {
-      const response = await api.get('/hello');
-      console.log('Backend connection successful:', response.data);
+      const response = await api.get("/events/today");
       return response.data;
     } catch (error) {
-      console.error('Backend connection failed:', error);
+      console.error("Error fetching today events:", error);
+      throw error;
+    }
+  },
+
+  // Get this week's events
+  getThisWeekEvents: async () => {
+    try {
+      const response = await api.get("/events/week");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching week events:", error);
       throw error;
     }
   },
 };
 
-// Remove the duplicate testBackendConnection function that was outside EventApi
-// Keep only this export:
-export default api;
+export default EventApi;
